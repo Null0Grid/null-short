@@ -26,7 +26,7 @@ rm -rf "$PREFIX/nullshort"
 install -d "$PREFIX/config" "$PREFIX/registry"
 cp -r "$HERE/nullshort" "$PREFIX/"
 install -m 644 "$HERE/config/config.toml" "$PREFIX/config/config.toml"
-install -m 644 "$HERE/registry/registry.toml" "$PREFIX/registry/registry.toml"
+install -m 644 "$HERE/registry/chain.toml" "$PREFIX/registry/chain.toml"
 find "$PREFIX" -name '__pycache__' -prune -exec rm -rf {} +
 
 cat > /usr/bin/null-short <<EOF

@@ -1,219 +1,214 @@
-# Null//Short official registry
+# Null//Short registry chain. DO NOT EDIT BY HAND.
 #
-# Hand-picked short codes for popular apps. Apps not listed here still get an
-# automatic 5-arrow code, so this list only needs the apps worth a short one.
-#
-# Rules: codes are ↑ + 2–3 arrows; the 2nd arrow is the family; codes and
-# desktop IDs must be unique. Once published, a code never changes.
-#
-#   ↑ ↑  dev & system     ↑ →  internet     ↑ ↓  games     ↑ ←  media & other
-#
-# Want an app added?  null-short submit <desktop-id>
-# Bump `version` with every change so clients pick up the update.
+# Each block is hashed, linked to the block before it and signed by a
+# maintainer. Change it only with `null-short registry ...` commands;
+# hand edits break the chain and every client will reject it.
 
-version = 1
+[[block]]
+index  = 0
+prev   = "0000000000000000000000000000000000000000000000000000000000000000"
+hash   = "ecf53a80fc84e6baba7a5f5870965acf7bddab0bfe327d11d92b0b6dcdd69cf3"   # informational; recomputed on load
+time   = "2026-10-29T23:00:00Z"
+signer = ""
+maintainers = []
 
-# ---------------------------------------------------------------- ↑ → internet
-[[app]]
+[[block.add]]
 name = "Firefox"
 seq  = "↑ → ↑"
 ids  = ["firefox-esr", "firefox", "org.mozilla.firefox"]
 
-[[app]]
+[[block.add]]
 name = "Microsoft Edge"
 seq  = "↑ → →"
 ids  = ["microsoft-edge", "microsoft-edge-stable", "com.microsoft.Edge"]
 
-[[app]]
+[[block.add]]
 name = "qBittorrent"
 seq  = "↑ → ↓"
 ids  = ["org.qbittorrent.qBittorrent", "qbittorrent"]
 
-[[app]]
+[[block.add]]
 name = "Discord"
 seq  = "↑ → ←"
 ids  = ["discord", "com.discordapp.Discord"]
 
-[[app]]
+[[block.add]]
 name = "Google Chrome"
 seq  = "↑ → → ↑"
 ids  = ["google-chrome", "com.google.Chrome"]
 
-[[app]]
+[[block.add]]
 name = "Chromium"
 seq  = "↑ → → ↓"
 ids  = ["chromium", "chromium-browser", "org.chromium.Chromium"]
 
-[[app]]
+[[block.add]]
 name = "Brave"
 seq  = "↑ → → ←"
 ids  = ["brave-browser", "com.brave.Browser"]
 
-[[app]]
+[[block.add]]
 name = "Thunderbird"
 seq  = "↑ → ↓ ↓"
 ids  = ["thunderbird", "org.mozilla.Thunderbird", "net.thunderbird.Thunderbird"]
 
-[[app]]
+[[block.add]]
 name = "Transmission"
 seq  = "↑ → ↓ →"
 ids  = ["transmission-gtk", "transmission-qt", "com.transmissionbt.Transmission"]
 
-[[app]]
+[[block.add]]
 name = "Telegram"
 seq  = "↑ → ← ↑"
 ids  = ["org.telegram.desktop"]
 
-[[app]]
+[[block.add]]
 name = "Signal"
 seq  = "↑ → ← ↓"
 ids  = ["signal-desktop", "org.signal.Signal"]
 
-[[app]]
+[[block.add]]
 name = "Remmina"
 seq  = "↑ → ↑ ↓"
 ids  = ["org.remmina.Remmina"]
 
-[[app]]
+[[block.add]]
 name = "Wireshark"
 seq  = "↑ → ↑ ↑"
 ids  = ["org.wireshark.Wireshark", "wireshark"]
 
-# ------------------------------------------------------------------- ↑ ↓ games
-[[app]]
+[[block.add]]
 name = "Steam"
 seq  = "↑ ↓ →"
 ids  = ["steam", "com.valvesoftware.Steam"]
 
-[[app]]
+[[block.add]]
 name = "Minecraft"
 seq  = "↑ ↓ ←"
 ids  = ["minecraft-launcher", "com.mojang.Minecraft", "org.prismlauncher.PrismLauncher"]
 
-[[app]]
+[[block.add]]
 name = "Lutris"
 seq  = "↑ ↓ ↑"
 ids  = ["net.lutris.Lutris", "lutris"]
 
-[[app]]
+[[block.add]]
 name = "Heroic Games Launcher"
 seq  = "↑ ↓ ↓"
 ids  = ["com.heroicgameslauncher.hgl", "heroic"]
 
-[[app]]
+[[block.add]]
 name = "Bottles"
 seq  = "↑ ↓ → ↑"
 ids  = ["com.usebottles.bottles"]
 
-[[app]]
+[[block.add]]
 name = "RetroArch"
 seq  = "↑ ↓ ← ↑"
 ids  = ["retroarch", "org.libretro.RetroArch"]
 
-# ------------------------------------------------------------ ↑ ↑ dev & system
-[[app]]
+[[block.add]]
 name = "System Settings"
 seq  = "↑ ↑ ↑"
 ids  = ["systemsettings", "org.kde.systemsettings", "org.gnome.Settings"]
 
-[[app]]
+[[block.add]]
 name = "Konsole"
 seq  = "↑ ↑ ↓"
 ids  = ["org.kde.konsole"]
 
-[[app]]
+[[block.add]]
 name = "VSCodium"
 seq  = "↑ ↑ →"
 ids  = ["codium", "com.vscodium.codium"]
 
-[[app]]
+[[block.add]]
 name = "Dolphin"
 seq  = "↑ ↑ ←"
 ids  = ["org.kde.dolphin"]
 
-[[app]]
+[[block.add]]
 name = "GNOME Terminal"
 seq  = "↑ ↑ ↓ ↓"
 ids  = ["org.gnome.Terminal"]
 
-[[app]]
+[[block.add]]
 name = "Discover"
 seq  = "↑ ↑ ↓ ↑"
 ids  = ["org.kde.discover"]
 
-[[app]]
+[[block.add]]
 name = "Visual Studio Code"
 seq  = "↑ ↑ → →"
 ids  = ["code", "com.visualstudio.code"]
 
-[[app]]
+[[block.add]]
 name = "Kate"
 seq  = "↑ ↑ → ↓"
 ids  = ["org.kde.kate"]
 
-[[app]]
+[[block.add]]
 name = "Spectacle"
 seq  = "↑ ↑ ← ↑"
 ids  = ["org.kde.spectacle"]
 
-# ---------------------------------------------------------- ↑ ← media & other
-[[app]]
+[[block.add]]
 name = "Claude"
 seq  = "↑ ← ↑"
 ids  = ["claude-desktop", "claude", "com.anthropic.Claude"]
-url  = "https://claude.ai"   # opens in the browser when no desktop app is installed
+url  = "https://claude.ai"
 
-[[app]]
+[[block.add]]
 name = "VLC"
 seq  = "↑ ← ↓"
 ids  = ["vlc", "org.videolan.VLC"]
 
-[[app]]
+[[block.add]]
 name = "Spotify"
 seq  = "↑ ← →"
 ids  = ["spotify", "com.spotify.Client"]
 
-[[app]]
+[[block.add]]
 name = "OBS Studio"
 seq  = "↑ ← ←"
 ids  = ["com.obsproject.Studio"]
 
-[[app]]
+[[block.add]]
 name = "Obsidian"
 seq  = "↑ ← ↑ ↑"
 ids  = ["obsidian", "md.obsidian.Obsidian"]
 
-[[app]]
+[[block.add]]
 name = "Okular"
 seq  = "↑ ← ↑ ↓"
 ids  = ["org.kde.okular"]
 
-[[app]]
+[[block.add]]
 name = "Kdenlive"
 seq  = "↑ ← ↓ →"
 ids  = ["org.kde.kdenlive"]
 
-[[app]]
+[[block.add]]
 name = "LibreOffice Writer"
 seq  = "↑ ← → ↑"
 ids  = ["libreoffice-writer"]
 
-[[app]]
+[[block.add]]
 name = "LibreOffice Calc"
 seq  = "↑ ← → ↓"
 ids  = ["libreoffice-calc"]
 
-[[app]]
+[[block.add]]
 name = "GIMP"
 seq  = "↑ ← ← ↑"
 ids  = ["gimp", "org.gimp.GIMP"]
 
-[[app]]
+[[block.add]]
 name = "Krita"
 seq  = "↑ ← ← ↓"
 ids  = ["org.kde.krita", "krita"]
 
-[[app]]
+[[block.add]]
 name = "Gwenview"
 seq  = "↑ ← ← →"
 ids  = ["org.kde.gwenview"]

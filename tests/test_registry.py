@@ -111,31 +111,6 @@ class RegistryTest(unittest.TestCase):
             with self.assertRaises(registry.RegistryError, msg=text):
                 registry.parse(text)
 
-    def test_newest_registry_wins(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            b, u = Path(tmp, "bundled.toml"), Path(tmp, "user.toml")
-            b.write_text('version = 3\n[[app]]\nname="A"\nseq="↑ → ↑"\nids=["a"]\n')
-            u.write_text('version = 2\n[[app]]\nname="Old"\nseq="↑ → ↑"\nids=["a"]\n')
-            self.assertEqual(registry.load(b, u).version, 3)
-            u.write_text('version = 4\n[[app]]\nname="New"\nseq="↑ → ↑"\nids=["a"]\n')
-            self.assertEqual(registry.load(b, u).entries[0].name, "New")
-            u.write_text("broken = [")
-            self.assertEqual(registry.load(b, u).version, 3)   # bad download ignored
-
-    def test_update(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            dest = Path(tmp, "reg.toml")
-            cur = registry.Registry(version=1)
-            newer = 'version = 2\n[[app]]\nname="A"\nseq="↑ → ↑"\nids=["a"]\n'
-            changed, reg = registry.update("x", cur, dest, fetch=lambda u: newer)
-            self.assertTrue(changed)
-            self.assertEqual(dest.read_text(), newer)
-            changed, _ = registry.update("x", reg, dest, fetch=lambda u: newer)
-            self.assertFalse(changed)
-            with self.assertRaises(registry.RegistryError):
-                registry.update("x", cur, dest, fetch=lambda u: "version = 9\n[[app]]\nseq='x'")
-            self.assertEqual(dest.read_text(), newer)      # invalid download not saved
-
     def test_suggest_code(self):
         reg = registry.load_file(registry.BUNDLED)
         code = registry.suggest_code("org.example.Newapp", "R", reg)

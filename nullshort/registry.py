@@ -1,10 +1,13 @@
 """The official registry: hand-picked short codes for popular apps.
 
-Rules (checked by tests and CI):
-  * every code starts with ↑ and is 3 or 4 arrows long
-    (auto codes are 5, so the two can never collide)
-  * the second arrow is the app's family
-  * no two entries share a code or a desktop ID
+The registry is stored as a signed hash chain (registry/chain.toml, see
+chain.py). This module turns the chain into a Registry, keeps the newest
+trustworthy copy, and fetches updates.
+
+Trust rules for updates:
+  * the genesis block must match the one shipped with Null//Short
+  * every later block must be signed by a maintainer listed in the chain
+  * the new chain must extend the one we already have (no rewrites, no forks)
 """
 
 from __future__ import annotations
@@ -17,19 +20,19 @@ import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from . import codes
+from . import chain, codes
 
 REPO = "Null0Grid/null-short"
-RAW_URL = f"https://raw.githubusercontent.com/{REPO}/main/registry/registry.toml"
+RAW_URL = f"https://raw.githubusercontent.com/{REPO}/main/registry/chain.toml"
 ISSUE_URL = f"https://github.com/{REPO}/issues/new"
 
-BUNDLED = Path(__file__).resolve().parent.parent / "registry" / "registry.toml"
+BUNDLED = Path(__file__).resolve().parent.parent / "registry" / "chain.toml"
 MIN_LEN, MAX_LEN = 3, 4
 
 
 def user_path() -> Path:
     base = os.environ.get("XDG_DATA_HOME") or str(Path.home() / ".local/share")
-    return Path(base) / "null-short" / "registry.toml"
+    return Path(base) / "null-short" / "chain.toml"
 
 
 class RegistryError(ValueError):
@@ -46,76 +49,73 @@ class RegEntry:
 
 @dataclass
 class Registry:
-    version: int = 0
-    entries: list[RegEntry] = field(default_factory=list)
+    version: int = 0                      # index of the head block
+    entries: list[RegEntry] = field(default_factory=list)   # active apps
+    reserved: set = field(default_factory=set)              # every code ever used
+    maintainers: list[dict] = field(default_factory=list)
+    hashes: list[str] = field(default_factory=list)
     source: Path | None = None
+    text: str = ""
 
     def by_id(self) -> dict[str, RegEntry]:
         return {i: e for e in self.entries for i in e.ids}
 
     def codes(self) -> set[tuple[str, ...]]:
-        return {e.code for e in self.entries}
+        return set(self.reserved) | {e.code for e in self.entries}
+
+    @property
+    def head(self) -> str:
+        return self.hashes[-1] if self.hashes else ""
 
 
-def parse(text: str, source: Path | None = None) -> Registry:
+def from_state(state: chain.State, source: Path | None = None, text: str = "") -> Registry:
+    entries = [RegEntry(r.name, r.code, list(r.ids), r.url) for r in state.active.values()]
+    return Registry(version=state.index, entries=entries, reserved=set(state.reserved),
+                    maintainers=list(state.maintainers), hashes=list(state.hashes),
+                    source=source, text=text)
+
+
+def from_chain_text(text: str, source: Path | None = None,
+                    genesis_hash: str | None = None) -> Registry:
     try:
-        data = tomllib.loads(text)
-    except tomllib.TOMLDecodeError as e:
-        raise RegistryError(f"{source or 'registry'}: {e}") from e
-    version = data.get("version", 0)
-    if not isinstance(version, int):
-        raise RegistryError("version must be an integer")
-    reg = Registry(version=version, source=source)
-    seen_codes: dict[tuple[str, ...], str] = {}
-    seen_ids: dict[str, str] = {}
-    for raw in data.get("app", []):
-        name = raw.get("name") or "?"
-        try:
-            code = codes.parse(raw.get("seq", ""))
-        except codes.CodeError as e:
-            raise RegistryError(f"{name}: {e}") from e
-        if not MIN_LEN <= len(code) <= MAX_LEN or code[0] != "U":
-            raise RegistryError(f"{name}: registry codes are ↑ + {MIN_LEN - 1}–{MAX_LEN - 1} arrows")
-        if code in seen_codes:
-            raise RegistryError(f"{name}: {codes.show(code)} already used by {seen_codes[code]}")
-        ids = raw.get("ids", [])
-        if isinstance(ids, str):
-            ids = [ids]
-        if not ids:
-            raise RegistryError(f"{name}: needs at least one desktop ID")
-        for i in ids:
-            if i in seen_ids:
-                raise RegistryError(f"{name}: ID {i} already belongs to {seen_ids[i]}")
-            seen_ids[i] = name
-        seen_codes[code] = name
-        reg.entries.append(RegEntry(name, code, list(ids), raw.get("url")))
-    return reg
+        state = chain.replay(chain.parse(text), genesis_hash)
+    except chain.ChainError as e:
+        raise RegistryError(f"{source or 'chain'}: {e}") from e
+    return from_state(state, source, text)
 
 
-def load_file(path: Path) -> Registry:
+def load_file(path: Path, genesis_hash: str | None = None) -> Registry:
     try:
-        return parse(path.read_text(encoding="utf-8"), source=path)
+        text = path.read_text(encoding="utf-8")
     except OSError as e:
         raise RegistryError(f"{path}: {e}") from e
+    return from_chain_text(text, path, genesis_hash)
+
+
+def _extends(new: Registry, old: Registry) -> bool:
+    """True if `new` contains all of `old`'s blocks unchanged."""
+    return len(new.hashes) >= len(old.hashes) and new.hashes[:len(old.hashes)] == old.hashes
 
 
 def load(bundled: Path = BUNDLED, user: Path | None = None) -> Registry:
-    """The newest valid registry: bundled copy or one fetched by update()."""
+    """The newest trustworthy registry: the bundled chain, or a longer chain
+    fetched by update() that extends it."""
     best = load_file(bundled) if bundled.is_file() else Registry()
     up = user or user_path()
-    if up.is_file():
+    if up.is_file() and best.hashes:
         try:
-            fetched = load_file(up)
-            if fetched.version > best.version:
+            fetched = load_file(up, genesis_hash=best.hashes[0])
+            if len(fetched.hashes) > len(best.hashes) and _extends(fetched, best):
                 best = fetched
         except RegistryError:
-            pass
+            pass        # a damaged or forged download is ignored
     return best
 
 
 def update(url: str = RAW_URL, current: Registry | None = None,
            dest: Path | None = None, fetch=None) -> tuple[bool, Registry]:
-    """Download the latest registry. Returns (changed, registry)."""
+    """Download the latest chain and keep it only if it verifies and extends
+    ours. Returns (changed, registry)."""
     current = current or load()
     if fetch is None:
         def fetch(u):
@@ -123,8 +123,12 @@ def update(url: str = RAW_URL, current: Registry | None = None,
                 return r.read().decode("utf-8")
     out = dest or user_path()
     text = fetch(url)
-    new = parse(text, source=out)          # validate before saving anything
-    if new.version <= current.version:
+    new = from_chain_text(text, out, genesis_hash=current.hashes[0] if current.hashes else None)
+    if not _extends(new, current):
+        if _extends(current, new):
+            return False, current           # remote is behind us
+        raise RegistryError("the downloaded chain rewrites history (fork); rejected")
+    if len(new.hashes) == len(current.hashes):
         return False, current
     out.parent.mkdir(parents=True, exist_ok=True)
     tmp = out.with_suffix(".tmp")
@@ -133,11 +137,34 @@ def update(url: str = RAW_URL, current: Registry | None = None,
     return True, new
 
 
+# -------------------------------------------- flat entry lists (snippets)
+def parse(text: str, source: Path | None = None) -> Registry:
+    """Parse a flat list of [[app]] entries (the format `submit` produces).
+    Applies the same rules as chain blocks. Used for snippets and tests."""
+    try:
+        data = tomllib.loads(text)
+    except tomllib.TOMLDecodeError as e:
+        raise RegistryError(f"{source or 'registry'}: {e}") from e
+    version = data.get("version", 0)
+    if not isinstance(version, int):
+        raise RegistryError("version must be an integer")
+    state = chain.State()
+    block = chain.Block(index=0, prev=chain.GENESIS_PREV, time="", maintainers=[],
+                        add=data.get("app", []))
+    try:
+        chain.apply(state, block)
+    except (chain.ChainError, codes.CodeError) as e:
+        raise RegistryError(str(e).removeprefix("block 0: ")) from e
+    reg = from_state(state, source)
+    reg.version = version
+    return reg
+
+
 def suggest_code(app_id: str, family: str, reg: Registry,
                  extra_taken: set | None = None) -> tuple[str, ...] | None:
     """Pick a free registry code for an app: 3 arrows if any are free, else 4.
-    Candidates are tried in an order seeded by the app ID, so suggestions are
-    stable but spread out."""
+    Retired codes count as taken. Candidates are tried in an order seeded by
+    the app ID, so suggestions are stable but spread out."""
     taken = reg.codes() | (extra_taken or set())
     seed = hashlib.sha256(app_id.encode()).digest()
     for length in range(MIN_LEN, MAX_LEN + 1):
@@ -163,7 +190,8 @@ def issue_url(name: str, app_id: str, categories: list[str], snippet: str) -> st
         f"### Registry request: {name}\n\n"
         f"- Desktop ID: `{app_id}`\n"
         f"- Categories: `{';'.join(categories) or 'none'}`\n\n"
-        "Proposed entry for `registry/registry.toml`:\n\n"
+        "Proposed entry (a maintainer adds it with "
+        "`null-short registry add --from <file>`):\n\n"
         f"```toml\n{snippet}```\n\n"
         "_Sent with `null-short submit`._\n"
     )

@@ -12,7 +12,7 @@ Tip: run `null-short submit <app>` and this is filled in for you.
 - Desktop ID: `<id>`  (from `null-short classify <app>`)
 - Categories: `<categories>`
 
-Proposed entry for `registry/registry.toml`:
+Proposed entry (a maintainer adds it with `null-short registry add --from <file>`):
 
 ```toml
 [[app]]

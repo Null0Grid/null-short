@@ -14,5 +14,5 @@ jobs:
           python-version: "3.11"
       - name: Unit tests
         run: python -m unittest discover -s tests -v
-      - name: Validate the official registry
-        run: python -c "from nullshort import registry; r = registry.load_file(registry.BUNDLED); print(f'registry v{r.version}: {len(r.entries)} apps OK')"
+      - name: Verify the registry chain (links, signatures, rules)
+        run: python -m nullshort registry --chain registry/chain.toml verify
