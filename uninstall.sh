@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Removes Null//Short. Leaves your ~/.config/null-short and group membership alone.
+# Removes Null//Short. Leaves your config, pins and group membership alone.
 # Usage:  sudo ./uninstall.sh
 set -euo pipefail
 [[ $EUID -eq 0 ]] || { echo "run with sudo"; exit 1; }

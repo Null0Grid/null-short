@@ -180,11 +180,9 @@ class LauncherTest(unittest.TestCase):
 class ConfigTest(unittest.TestCase):
     def test_bundled_config(self):
         cfg = config.load(config.BUNDLED)
-        names = {e.name for e in cfg.entries}
-        self.assertEqual(names, {"Firefox", "Microsoft Edge", "Steam", "Minecraft",
-                                 "qBittorrent", "Claude"})
+        self.assertEqual(cfg.entries, [])        # codes come from the registry
         self.assertEqual(cfg.trigger, "KEY_CAPSLOCK")
-        self.assertTrue(all(e.code[0] == "U" for e in cfg.entries))
+        self.assertTrue(cfg.auto_apps)
 
     def test_duplicate_code_rejected(self):
         data = {"code": [{"name": "A", "seq": "U U", "run": "a"},
@@ -196,7 +194,7 @@ class ConfigTest(unittest.TestCase):
         for data in ({"code": [{"name": "A", "seq": "U"}]},
                      {"code": [{"name": "A", "seq": "X", "run": "a"}]},
                      {"trigger": "CAPS", "code": [{"seq": "U", "run": "a"}]},
-                     {"code": []}):
+                     {"auto_apps": "yes"}):
             with self.assertRaises(config.ConfigError):
                 config.from_dict(data)
 

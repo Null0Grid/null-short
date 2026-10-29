@@ -19,15 +19,18 @@ except ImportError as e:  # pragma: no cover - depends on the host
         "python3-evdev is missing. Install it with:  sudo apt install python3-evdev"
     ) from e
 
+from . import apps as apps_mod, autocode, config as config_mod, registry
 from .actions import Dispatcher
+from .catalog import assemble
 from .codes import Matcher
-from .config import Config
+from .config import Config, ConfigError
 from .engine import Router
 
 log = logging.getLogger("null-short")
 
 VIRTUAL_PREFIX = "null-short virtual"
 RESCAN_SECONDS = 2.0
+RELOAD_EVERY = 5          # check for new apps / config edits every 5 scans (~10 s)
 
 
 def resolve_key(name: str) -> int:
@@ -58,14 +61,59 @@ def list_keyboards() -> list:
     return found
 
 
+def _watch_state(config_path) -> tuple:
+    files = [config_mod.user_path(), config_mod.SYSTEM, registry.user_path(),
+             registry.BUNDLED, autocode.pins_path()]
+    if config_path:
+        files.append(config_mod.Path(config_path))
+    stamps = []
+    for f in files:
+        try:
+            stamps.append(f.stat().st_mtime_ns)
+        except OSError:
+            stamps.append(None)
+    return (apps_mod.fingerprint(), tuple(stamps))
+
+
 class Daemon:
-    def __init__(self, cfg: Config):
+    def __init__(self, cfg: Config, config_path: str | None = None):
         self.cfg = cfg
-        self.router = Router(resolve_key(cfg.trigger), Matcher(cfg.table()),
+        self.config_path = config_path
+        catalog = assemble(cfg)
+        for w in catalog.warnings:
+            log.warning(w)
+        self.router = Router(resolve_key(cfg.trigger), Matcher(catalog.table()),
                              tap_passthrough=cfg.tap_passthrough)
         self.dispatcher = Dispatcher(cfg)
         self.attached: dict[str, tuple] = {}   # path -> (dev, ui, task)
         self._stop: asyncio.Event | None = None
+        self._state = _watch_state(config_path)
+        self._pending_reload = False
+        self.code_count = len(catalog.entries)
+
+    def reload(self, why: str = "") -> None:
+        """Rebuild codes (new apps, config or registry edits) without restarting."""
+        if self.router.listening:
+            self._pending_reload = True      # never swap mid-code
+            return
+        self._pending_reload = False
+        try:
+            cfg = config_mod.load(self.config_path)
+            catalog = assemble(cfg)
+        except (ConfigError, registry.RegistryError) as e:
+            log.error("reload failed, keeping current codes: %s", e)
+            return
+        for w in catalog.warnings:
+            log.warning(w)
+        if cfg.trigger != self.cfg.trigger:
+            log.warning("trigger changed; restart the service to apply it")
+        self.cfg.entries = cfg.entries
+        self.cfg.sounds, self.cfg.notify = cfg.sounds, cfg.notify
+        self.router.matcher = Matcher(catalog.table())
+        self.router.tap_passthrough = cfg.tap_passthrough
+        self.code_count = len(catalog.entries)
+        self._state = _watch_state(self.config_path)
+        log.info("codes reloaded (%s): %d codes", why or "change", self.code_count)
 
     # ---------------------------------------------------------------- #
     async def run(self) -> None:
@@ -73,11 +121,17 @@ class Daemon:
         loop = asyncio.get_running_loop()
         for sig in (signal.SIGINT, signal.SIGTERM):
             loop.add_signal_handler(sig, self.stop, f"signal {sig.name}")
+        loop.add_signal_handler(signal.SIGHUP, self.reload, "SIGHUP")
         log.info("Null//Short running: trigger %s, %d codes, panic = Ctrl+Alt+Shift+Esc",
-                 self.cfg.trigger, len(self.cfg.entries))
+                 self.cfg.trigger, self.code_count)
+        ticks = 0
         try:
             while not self._stop.is_set():
                 await self.scan()
+                ticks += 1
+                if self._pending_reload or (ticks % RELOAD_EVERY == 0
+                                            and _watch_state(self.config_path) != self._state):
+                    self.reload("files changed")
                 try:
                     await asyncio.wait_for(self._stop.wait(), RESCAN_SECONDS)
                 except asyncio.TimeoutError:
@@ -173,5 +227,5 @@ class Daemon:
                 log.exception("action failed")
 
 
-def run(cfg: Config) -> None:
-    asyncio.run(Daemon(cfg).run())
+def run(cfg: Config, config_path: str | None = None) -> None:
+    asyncio.run(Daemon(cfg, config_path).run())

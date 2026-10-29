@@ -30,6 +30,7 @@ class Entry:
     run: str | None = None
     url: str | None = None
     cooldown: float = 1.0
+    source: str = "config"     # config | registry | auto | auto (old)
 
 
 @dataclass
@@ -38,6 +39,7 @@ class Config:
     tap_passthrough: bool = True
     sounds: bool = True
     notify: bool = False
+    auto_apps: bool = True
     entries: list[Entry] = field(default_factory=list)
     source: Path | None = None
 
@@ -69,7 +71,7 @@ def from_dict(data: dict, source: Path | None = None) -> Config:
     if not isinstance(trigger, str) or not trigger.startswith("KEY_"):
         raise ConfigError(f"trigger must be a key name like KEY_CAPSLOCK, got {trigger!r}")
     cfg.trigger = trigger
-    for key in ("tap_passthrough", "sounds", "notify"):
+    for key in ("tap_passthrough", "sounds", "notify", "auto_apps"):
         if key in data:
             if not isinstance(data[key], bool):
                 raise ConfigError(f"{key} must be true or false")
@@ -101,6 +103,4 @@ def from_dict(data: dict, source: Path | None = None) -> Config:
             name=name, code=seq, apps=list(apps),
             run=raw.get("run"), url=raw.get("url"), cooldown=float(cooldown),
         ))
-    if not cfg.entries:
-        raise ConfigError("no codes defined")
     return cfg

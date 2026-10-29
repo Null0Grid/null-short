@@ -1,52 +1,33 @@
 # Null//Short config
 #
 # Hold the trigger key, tap an arrow code, let go. If the code matches, it fires.
-# Codes can be written as arrows (↑ ↓ ← →), words (up down left right) or letters (U D L R).
 #
+# Where codes come from (first one wins):
+#   1. [[code]] entries in this file
+#   2. the official registry (short codes for popular apps)
+#   3. automatic codes for every other installed app (↑ + family + 3 arrows)
+#
+# See all your codes:  null-short list
 # Your own copy lives at ~/.config/null-short/config.toml and overrides this one.
 # After editing:  null-short check   then   systemctl --user restart null-short
 
 trigger = "KEY_CAPSLOCK"   # any evdev key name, e.g. KEY_RIGHTALT, KEY_F13
 tap_passthrough = true     # a quick tap with no arrows still does the key's normal job
+auto_apps = true           # give every installed app an automatic code
 sounds = true              # success / fail sounds
 notify = false             # desktop notification on fail
 
-# Every app code starts with ↑ ("launch").  Each entry tries `apps` in order
-# (.desktop IDs: distro package, then Flatpak), then `run`, then `url`.
-
-[[code]]
-name = "Firefox"
-seq  = "↑ → ↑"
-apps = ["firefox-esr", "firefox", "org.mozilla.firefox"]
-
-[[code]]
-name = "Microsoft Edge"
-seq  = "↑ → →"
-apps = ["microsoft-edge", "microsoft-edge-stable", "com.microsoft.Edge"]
-
-[[code]]
-name = "Steam"
-seq  = "↑ ↓ →"
-apps = ["steam", "com.valvesoftware.Steam"]
-
-[[code]]
-name = "Minecraft"
-seq  = "↑ ↓ ←"
-apps = ["minecraft-launcher", "com.mojang.Minecraft", "org.prismlauncher.PrismLauncher"]
-
-[[code]]
-name = "qBittorrent"
-seq  = "↑ → ↓"
-apps = ["org.qbittorrent.qBittorrent", "qbittorrent"]
-
-[[code]]
-name = "Claude"
-seq  = "↑ ← ↑"
-apps = ["claude-desktop", "claude", "com.anthropic.Claude"]
-url  = "https://claude.ai"   # fallback when no desktop app is installed
-
-# Example of a plain command:
+# Your own codes. Codes can be arrows (↑ ↓ ← →), words (up down left right)
+# or letters (U D L R). Each needs `apps` (.desktop IDs, tried in order),
+# `run` (a command) or `url`.
+#
 # [[code]]
 # name = "NULL // PLAY"
-# seq  = "↑ ↓ ↓ ↑"
+# seq  = "↓ ↓ ↑"
 # run  = "gamemode"
+#
+# Override a registry code, e.g. give Firefox something else:
+# [[code]]
+# name = "Firefox"
+# seq  = "→ →"
+# apps = ["firefox-esr", "org.mozilla.firefox"]

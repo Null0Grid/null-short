@@ -23,9 +23,10 @@ fi
 
 say "installing files to $PREFIX"
 rm -rf "$PREFIX/nullshort"
-install -d "$PREFIX/config"
+install -d "$PREFIX/config" "$PREFIX/registry"
 cp -r "$HERE/nullshort" "$PREFIX/"
 install -m 644 "$HERE/config/config.toml" "$PREFIX/config/config.toml"
+install -m 644 "$HERE/registry/registry.toml" "$PREFIX/registry/registry.toml"
 find "$PREFIX" -name '__pycache__' -prune -exec rm -rf {} +
 
 cat > /usr/bin/null-short <<EOF
@@ -61,7 +62,8 @@ cat <<EOF
   2. Start it:   systemctl --user enable --now null-short
   3. Hold Caps Lock, tap ↑ → ↑, release  →  Firefox.
 
-  See your codes:   null-short list
+  See your codes:   null-short list      (every installed app gets one)
+  Suggest an app:   null-short submit <app>
   Emergency stop:   Ctrl+Alt+Shift+Esc
   Your own config:  cp /etc/null-short/config.toml ~/.config/null-short/config.toml
 EOF

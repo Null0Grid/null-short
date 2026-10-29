@@ -1,12 +1,14 @@
 """Exercises the daemon's event glue with a fake evdev module, so it runs
 anywhere (no keyboard, no /dev/uinput needed)."""
 
+import os
 import sys
+import tempfile
 import types
 import unittest
 from collections import namedtuple
 
-from nullshort.codes import KEY_CAPSLOCK, KEY_RIGHT, KEY_UP
+from nullshort.codes import KEY_CAPSLOCK, KEY_LEFT, KEY_UP
 
 EV_SYN, EV_KEY, EV_MSC = 0, 1, 4
 KEY_A = 30
@@ -50,12 +52,24 @@ class FakeDev:
 
 class DaemonGlueTest(unittest.TestCase):
     def setUp(self):
+        # Keep the test away from the real home: no apps, no pins written.
+        self.tmp = tempfile.TemporaryDirectory()
+        self.env = dict(os.environ)
+        for var in ("HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CONFIG_HOME"):
+            os.environ[var] = self.tmp.name
+        os.environ["XDG_DATA_DIRS"] = self.tmp.name + "/none"
+        self.addCleanup(self.restore)
         cfg = config.load(config.BUNDLED)
         cfg.sounds = False
         self.d = daemon.Daemon(cfg)
         self.fired = []
         self.d.dispatcher.handle = lambda ev, act: self.fired.append((ev, act))
         self.ui = FakeUI()
+
+    def restore(self):
+        os.environ.clear()
+        os.environ.update(self.env)
+        self.tmp.cleanup()
 
     def send(self, t, c, v):
         self.d.on_event(self.ui, Ev(t, c, v))
@@ -65,13 +79,33 @@ class DaemonGlueTest(unittest.TestCase):
         self.send(EV_SYN, 0, 0)
         self.assertEqual(self.ui.out, [(EV_KEY, KEY_A, 1), (EV_SYN, 0, 0)])
 
-    def test_code_fires_firefox(self):
-        for k, v in [(KEY_CAPSLOCK, 1), (KEY_UP, 1), (KEY_UP, 0), (KEY_RIGHT, 1),
-                     (KEY_RIGHT, 0), (KEY_UP, 1), (KEY_UP, 0), (KEY_CAPSLOCK, 0)]:
+    def test_registry_code_fires(self):
+        # No apps installed here, so only Claude (web fallback) is in the table.
+        for k, v in [(KEY_CAPSLOCK, 1), (KEY_UP, 1), (KEY_UP, 0), (KEY_LEFT, 1),
+                     (KEY_LEFT, 0), (KEY_UP, 1), (KEY_UP, 0), (KEY_CAPSLOCK, 0)]:
             self.send(EV_KEY, k, v)
         self.assertEqual(self.ui.out, [])
         self.assertEqual(self.fired[-1][0], "fire")
-        self.assertEqual(self.fired[-1][1].name, "Firefox")
+        self.assertEqual(self.fired[-1][1].name, "Claude")
+        self.assertEqual(self.fired[-1][1].source, "registry")
+
+    def test_reload_picks_up_new_app(self):
+        appdir = os.path.join(self.tmp.name, "applications")
+        os.makedirs(appdir)
+        with open(os.path.join(appdir, "steam.desktop"), "w") as f:
+            f.write("[Desktop Entry]\nType=Application\nName=Steam\nExec=steam\nCategories=Game;\n")
+        before = self.d.code_count
+        self.d.reload("test")
+        self.assertEqual(self.d.code_count, before + 1)
+        self.assertEqual(self.d.router.matcher.get(("U", "D", "R")).name, "Steam")
+
+    def test_reload_waits_while_code_in_progress(self):
+        self.send(EV_KEY, KEY_CAPSLOCK, 1)
+        self.d.reload("test")
+        self.assertTrue(self.d._pending_reload)
+        self.send(EV_KEY, KEY_CAPSLOCK, 0)
+        self.d.reload("test")
+        self.assertFalse(self.d._pending_reload)
 
     def test_tap_emits_with_syn_between(self):
         self.send(EV_KEY, KEY_CAPSLOCK, 1)
