@@ -7,10 +7,10 @@
 [[block]]
 index  = 0
 prev   = "0000000000000000000000000000000000000000000000000000000000000000"
-hash   = "ecf53a80fc84e6baba7a5f5870965acf7bddab0bfe327d11d92b0b6dcdd69cf3"   # informational; recomputed on load
+hash   = "7912f9173b736e5f2ccd1b6a7c4e1ad564e95775d6d4aae24954529312dfe492"   # informational; recomputed on load
 time   = "2026-10-29T23:00:00Z"
 signer = ""
-maintainers = []
+maintainers = [{ name = "null0grid", key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID5eLIXylsAd1ALrSVOB5XOPsA6RZkGmSm7JpxI5VRhs" }]
 
 [[block.add]]
 name = "Firefox"
