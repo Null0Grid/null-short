@@ -83,4 +83,4 @@ class Dispatcher:
 
     def notify(self, text: str) -> None:
         if self.cfg.notify and shutil.which("notify-send"):
-            _quiet(["notify-send", "-a", "Null//Short", "-t", "2000", "Null//Short", text])
+            _quiet(["notify-send", "-a", "null-short", "-t", "2000", "null-short", text])

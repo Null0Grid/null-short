@@ -122,7 +122,7 @@ class Daemon:
         for sig in (signal.SIGINT, signal.SIGTERM):
             loop.add_signal_handler(sig, self.stop, f"signal {sig.name}")
         loop.add_signal_handler(signal.SIGHUP, self.reload, "SIGHUP")
-        log.info("Null//Short running: trigger %s, %d codes, panic = Ctrl+Alt+Shift+Esc",
+        log.info("null-short running: trigger %s, %d codes, panic = Ctrl+Alt+Shift+Esc",
                  self.cfg.trigger, self.code_count)
         ticks = 0
         try:
@@ -139,7 +139,7 @@ class Daemon:
         finally:
             for path in list(self.attached):
                 self.detach(path)
-            log.info("Null//Short stopped, keyboards released")
+            log.info("null-short stopped, keyboards released")
 
     def stop(self, why: str = "") -> None:
         log.info("stopping (%s)", why)

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Null//Short installer for Debian-based systems (Null OS, Debian, Ubuntu).
+# null-short installer for Debian-based systems (Null OS, Debian, Ubuntu).
 # Usage:  sudo ./install.sh
 set -euo pipefail
 
@@ -56,7 +56,7 @@ install -m 644 "$HERE/packaging/null-short.service" /usr/lib/systemd/user/null-s
 
 cat <<EOF
 
-  Null//Short installed.
+  null-short installed.
 
   1. Log out and back in (so the input group applies).
   2. Start it:   systemctl --user enable --now null-short

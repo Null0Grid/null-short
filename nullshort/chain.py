@@ -110,7 +110,7 @@ def _q(s: str) -> str:
 
 
 HEADER = """\
-# Null//Short registry chain. DO NOT EDIT BY HAND.
+# null-short registry chain. DO NOT EDIT BY HAND.
 #
 # Each block is hashed, linked to the block before it and signed by a
 # maintainer. Change it only with `null-short registry ...` commands;

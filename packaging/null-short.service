@@ -1,5 +1,5 @@
 [Unit]
-Description=Null//Short arrow-code launcher
+Description=null-short arrow-code launcher
 Documentation=https://github.com/Null0Grid/null-short
 PartOf=graphical-session.target
 After=graphical-session.target

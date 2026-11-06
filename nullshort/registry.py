@@ -5,7 +5,7 @@ chain.py). This module turns the chain into a Registry, keeps the newest
 trustworthy copy, and fetches updates.
 
 Trust rules for updates:
-  * the genesis block must match the one shipped with Null//Short
+  * the genesis block must match the one shipped with null-short
   * every later block must be signed by a maintainer listed in the chain
   * the new chain must extend the one we already have (no rewrites, no forks)
 """

@@ -1,4 +1,4 @@
-# Null//Short
+# Null Short
 
 Arrow-code launcher for Linux, part of the Null Grid family. Hold a trigger key, tap a
 short arrow code, let go, and the app opens. Think stratagem inputs, but for your desktop.
@@ -123,7 +123,7 @@ no mining or tokens:
 
 When you run `update-registry`, your machine checks that:
 
-1. the first (genesis) block matches the one that shipped with Null//Short;
+1. the first (genesis) block matches the one that shipped with null-short;
 2. every link and every signature is valid, using a maintainer listed in the chain;
 3. the new chain **extends** the one you already have, so it's not a rewrite or fork.
 
@@ -195,7 +195,7 @@ and it picks up keyboards you plug in later.
 ## Security note
 
 Being in the `input` group lets programs running as you read keyboard input
-directly, which is what Null//Short needs to work. Only install it on machines you trust.
+directly, which is what null-short needs to work. Only install it on machines you trust.
 `sudo ./uninstall.sh` removes everything except your config, pins and group membership.
 
 Keep your registry signing key safe: anyone holding it can publish registry blocks.

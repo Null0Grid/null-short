@@ -51,7 +51,7 @@ def load_pins(path: Path | None = None) -> dict[str, tuple[str, ...]]:
 def save_pins(pins: dict[str, tuple[str, ...]], path: Path | None = None) -> None:
     p = path or pins_path()
     p.parent.mkdir(parents=True, exist_ok=True)
-    lines = ["# Null//Short: auto codes already given out. They never change.",
+    lines = ["# null-short: auto codes already given out. They never change.",
              "# Delete a line to let that app get a fresh code.", "", "[pins]"]
     for app_id in sorted(pins):
         key = app_id.replace("\\", "\\\\").replace('"', '\\"')

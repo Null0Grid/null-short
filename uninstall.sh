@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Removes Null//Short. Leaves your config, pins and group membership alone.
+# Removes null-short. Leaves your config, pins and group membership alone.
 # Usage:  sudo ./uninstall.sh
 set -euo pipefail
 [[ $EUID -eq 0 ]] || { echo "run with sudo"; exit 1; }
@@ -14,5 +14,5 @@ rm -f /usr/lib/systemd/user/null-short.service /usr/bin/null-short \
 rm -rf /usr/lib/null-short
 udevadm control --reload-rules || true
 
-echo "Null//Short removed. /etc/null-short was kept; delete it if you like."
+echo "null-short removed. /etc/null-short was kept; delete it if you like."
 echo "To leave the input group:  sudo gpasswd -d ${SUDO_USER:-\$USER} input"

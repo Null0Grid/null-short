@@ -1,4 +1,4 @@
-"""Command line for Null//Short."""
+"""Command line for null-short."""
 
 from __future__ import annotations
 
@@ -62,7 +62,7 @@ def cmd_run(args) -> None:
 
 def cmd_list(args) -> None:
     cfg, cat = _catalog(args)
-    print(f"Null//Short {__version__}  ·  trigger {cfg.trigger}  ·  {len(cat.entries)} codes\n")
+    print(f"null-short {__version__}  ·  trigger {cfg.trigger}  ·  {len(cat.entries)} codes\n")
     entries = sorted(cat.entries, key=_sort_key)
     if args.source:
         entries = [e for e in entries if e.source.startswith(args.source)]
@@ -317,8 +317,8 @@ def cmd_devices(args) -> None:
 
 # ---------------------------------------------------------------------- main
 def main(argv=None) -> None:
-    p = argparse.ArgumentParser(prog="null-short", description="Null//Short: arrow-code launcher")
-    p.add_argument("--version", action="version", version=f"Null//Short {__version__}")
+    p = argparse.ArgumentParser(prog="null-short", description="null-short: arrow-code launcher")
+    p.add_argument("--version", action="version", version=f"null-short {__version__}")
     p.add_argument("-c", "--config", help="path to config.toml")
     p.add_argument("-v", "--verbose", action="store_true")
     sub = p.add_subparsers(dest="cmd", required=True, metavar="command")
